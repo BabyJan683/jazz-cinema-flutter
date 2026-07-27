@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import '../models/movie.dart';
 import '../providers/app_provider.dart';
 import '../providers/theme_provider.dart';
+import '../config/themes.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/section_header.dart';
 import 'movie_detail_screen.dart';
@@ -173,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded, size: 56, color: Colors.white20),
+            Icon(Icons.search_off_rounded, size: 56, color: Colors.white.withOpacity(0.2)),
             const SizedBox(height: 12),
             Text('No results for "${_searchCtrl.text}"',
                 style: TextStyle(color: Colors.white38)),
@@ -246,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
               errorWidget: (_, __, ___) => Container(
                 height: 240,
                 color: theme.surface,
-                child: Icon(Icons.movie_rounded, size: 60, color: Colors.white20),
+                child: Icon(Icons.movie_rounded, size: 60, color: Colors.white.withOpacity(0.2)),
               ),
             ),
           ),
@@ -423,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.wifi_off_rounded, size: 60, color: Colors.white20),
+          Icon(Icons.wifi_off_rounded, size: 60, color: Colors.white.withOpacity(0.2)),
           const SizedBox(height: 16),
           Text(provider.moviesError,
               textAlign: TextAlign.center,

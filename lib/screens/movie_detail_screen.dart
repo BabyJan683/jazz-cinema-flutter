@@ -142,7 +142,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                     errorWidget: (_, __, ___) => Container(
                       color: theme.surface,
                       child: Icon(Icons.movie_rounded,
-                          size: 80, color: Colors.white20),
+                          size: 80, color: Colors.white.withOpacity(0.2)),
                     ),
                   ),
                   Container(

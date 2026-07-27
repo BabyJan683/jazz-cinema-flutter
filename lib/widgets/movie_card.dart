@@ -58,7 +58,7 @@ class MovieCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.movie_rounded,
-                          size: 32, color: Colors.white20),
+                          size: 32, color: Colors.white.withOpacity(0.2)),
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),

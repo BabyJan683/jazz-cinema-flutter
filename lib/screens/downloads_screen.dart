@@ -33,7 +33,7 @@ class DownloadsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.download_done_rounded,
-                        size: 72, color: Colors.white20),
+                        size: 72, color: Colors.white.withOpacity(0.2)),
                     const SizedBox(height: 16),
                     const Text('No Downloads Yet',
                         style: TextStyle(

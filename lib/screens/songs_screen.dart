@@ -33,7 +33,7 @@ class SongsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.library_music_rounded,
-                        size: 72, color: Colors.white20),
+                        size: 72, color: Colors.white.withOpacity(0.2)),
                     const SizedBox(height: 16),
                     const Text('Music Library',
                         style: TextStyle(
