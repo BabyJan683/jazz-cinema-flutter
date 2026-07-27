@@ -1,0 +1,4 @@
+-keep class io.flutter.** { *; }
+-keep class com.cinema.jazz.** { *; }
+-dontwarn com.mysql.**
+-keep class com.mysql.** { *; }

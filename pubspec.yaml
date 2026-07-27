@@ -1,0 +1,66 @@
+name: jazz_cinema
+description: Jazz Cinema Pro v11 — Beautiful Flutter movie streaming app
+publish_to: 'none'
+version: 11.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  provider: ^6.1.2
+
+  # Network & HTTP
+  http: ^1.2.1
+  dio: ^5.7.0
+  connectivity_plus: ^6.1.0
+
+  # Database (direct MySQL)
+  mysql_client: ^0.0.27
+
+  # Video playback
+  video_player: ^2.9.1
+  chewie: ^1.8.5
+
+  # Image caching
+  cached_network_image: ^3.4.1
+
+  # Local storage
+  shared_preferences: ^2.3.2
+  path_provider: ^2.1.4
+
+  # UI / Animations
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.0
+  google_fonts: ^6.2.1
+
+  # Utils
+  intl: ^0.19.0
+  url_launcher: ^6.3.1
+  package_info_plus: ^8.1.2
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/valid_keys.txt
+    - assets/images/
+
+  fonts:
+    - family: JazzFont
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
