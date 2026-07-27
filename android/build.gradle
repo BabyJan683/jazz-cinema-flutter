@@ -6,8 +6,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // AGP 8.3.2 — stable, supports minSdk 21, works with Gradle 8.4
-        classpath 'com.android.tools.build:gradle:8.3.2'
+        // AGP 8.1.0 — proven working version with Flutter 3.24 + this plugin set
+        classpath 'com.android.tools.build:gradle:8.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

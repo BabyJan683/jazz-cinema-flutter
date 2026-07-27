@@ -34,6 +34,9 @@ dependencies:
   flutter_animate: ^4.5.0
   google_fonts: ^6.2.1
 
+  # Pin to 8.x — v9.x has a Gradle compatibility issue with AGP 8.1
+  package_info_plus: ^8.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
