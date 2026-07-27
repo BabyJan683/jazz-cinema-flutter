@@ -37,6 +37,19 @@ jobs:
       - name: 📦 Get Flutter dependencies
         run: flutter pub get
 
+      - name: 🖼️ Generate app launcher icons
+        run: |
+          # Create a temp Flutter project to extract the default icons
+          flutter create --project-name=icon_source /tmp/icon_source --quiet
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            mkdir -p android/app/src/main/res/mipmap-${density}
+            cp /tmp/icon_source/android/app/src/main/res/mipmap-${density}/ic_launcher.png \
+               android/app/src/main/res/mipmap-${density}/ic_launcher.png
+            # Round icon (same file is fine for release builds)
+            cp /tmp/icon_source/android/app/src/main/res/mipmap-${density}/ic_launcher.png \
+               android/app/src/main/res/mipmap-${density}/ic_launcher_round.png
+          done
+
       - name: 🔑 Generate signing keystore
         run: |
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
