@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../providers/theme_provider.dart';
-import '../services/auth_service.dart';
 import 'key_activation_screen.dart';
 import 'main_screen.dart';
 
@@ -22,30 +21,48 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    _boot();
+    // Delay one frame so the widget tree is fully built before async work starts
+    WidgetsBinding.instance.addPostFrameCallback((_) => _boot());
   }
 
   Future<void> _boot() async {
-    final appProvider = context.read<AppProvider>();
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final appProvider = context.read<AppProvider>();
 
-    _setStatus('Fetching config...', 0.2);
-    await appProvider.init();
+      _setStatus('Loading...', 0.1);
+      await Future.delayed(const Duration(milliseconds: 500));
 
-    _setStatus('Pre-loading posters...', 0.5);
-    await Future.delayed(const Duration(milliseconds: 800));
+      _setStatus('Fetching config...', 0.3);
+      // init() fetches remote config + reads auth state from SharedPreferences
+      await appProvider.init().timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {
+          // Config fetch timed out — app continues with cached / default config
+        },
+      );
 
-    _setStatus('Checking access...', 0.8);
-    await Future.delayed(const Duration(milliseconds: 400));
+      _setStatus('Pre-loading content...', 0.6);
+      await Future.delayed(const Duration(milliseconds: 600));
 
-    _setStatus('Ready!', 1.0);
-    await Future.delayed(const Duration(milliseconds: 300));
+      _setStatus('Checking access...', 0.85);
+      await Future.delayed(const Duration(milliseconds: 300));
 
-    if (!mounted) return;
-    final state = appProvider.authState;
-    if (state.isLoggedIn) {
-      _navigate(const MainScreen());
-    } else {
+      _setStatus('Ready!', 1.0);
+      await Future.delayed(const Duration(milliseconds: 250));
+
+      if (!mounted) return;
+      final state = appProvider.authState;
+      if (state.isLoggedIn) {
+        _navigate(const MainScreen());
+      } else {
+        _navigate(const KeyActivationScreen());
+      }
+    } catch (e) {
+      // Any unexpected error — navigate to key activation so the user isn't
+      // stuck on the splash screen (better than a crash in release mode)
+      _setStatus('Starting...', 1.0);
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
       _navigate(const KeyActivationScreen());
     }
   }
@@ -59,6 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigate(Widget screen) {
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => screen,
@@ -81,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo / Title
+                  // Logo
                   Container(
                     width: 100,
                     height: 100,
@@ -107,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
                       )
                       .fadeIn(duration: 400.ms),
                   const SizedBox(height: 24),
-                  Text(
+                  const Text(
                     'JAZZ CINEMA',
                     style: TextStyle(
                       fontSize: 32,
@@ -128,9 +146,7 @@ class _SplashScreenState extends State<SplashScreen>
                       color: theme.primary,
                       letterSpacing: 8,
                     ),
-                  )
-                      .animate(delay: 400.ms)
-                      .fadeIn(duration: 500.ms),
+                  ).animate(delay: 400.ms).fadeIn(duration: 500.ms),
                   const SizedBox(height: 48),
 
                   // Pulsing dot + status

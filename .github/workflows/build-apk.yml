@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag (e.g. v11.0.1)'
+        description: 'Release tag (e.g. v11.0.2)'
         required: false
         default: ''
 
@@ -27,10 +27,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 🐦 Set up Flutter
+      - name: 🐦 Set up Flutter (latest stable)
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.24.5'
           channel: 'stable'
           cache: true
 
@@ -39,25 +39,24 @@ jobs:
 
       - name: 🖼️ Generate app launcher icons
         run: |
-          # Create a temp Flutter project to extract the default icons
-          flutter create --project-name=icon_source /tmp/icon_source --quiet
+          flutter create --project-name=icon_source /tmp/icon_source --quiet 2>/dev/null || true
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             mkdir -p android/app/src/main/res/mipmap-${density}
-            cp /tmp/icon_source/android/app/src/main/res/mipmap-${density}/ic_launcher.png \
-               android/app/src/main/res/mipmap-${density}/ic_launcher.png
-            # Round icon (same file is fine for release builds)
-            cp /tmp/icon_source/android/app/src/main/res/mipmap-${density}/ic_launcher.png \
-               android/app/src/main/res/mipmap-${density}/ic_launcher_round.png
+            SRC="/tmp/icon_source/android/app/src/main/res/mipmap-${density}/ic_launcher.png"
+            if [ -f "$SRC" ]; then
+              cp "$SRC" "android/app/src/main/res/mipmap-${density}/ic_launcher.png"
+              cp "$SRC" "android/app/src/main/res/mipmap-${density}/ic_launcher_round.png"
+            fi
           done
 
-      - name: 🔑 Generate signing keystore
+      - name: 🔑 Generate / load signing keystore
         run: |
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "Using provided keystore..."
+            echo "Using provided keystore from secrets..."
             echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
             echo "STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-            echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+            echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}"             >> $GITHUB_ENV
+            echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}"       >> $GITHUB_ENV
           else
             echo "Generating fresh self-signed keystore..."
             keytool -genkey -v \
@@ -66,11 +65,12 @@ jobs:
               -keyalg RSA -keysize 2048 \
               -validity 10000 \
               -storepass jazzcinema2024 \
-              -keypass jazzcinema2024 \
-              -dname "CN=Jazz Cinema Pro, OU=Mobile, O=JazzCinema, L=Lahore, ST=Punjab, C=PK"
+              -keypass  jazzcinema2024 \
+              -dname "CN=Jazz Cinema Pro, OU=Mobile, O=JazzCinema, L=Lahore, ST=Punjab, C=PK" \
+              -noprompt
             echo "STORE_PASSWORD=jazzcinema2024" >> $GITHUB_ENV
-            echo "KEY_ALIAS=jazz_cinema" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=jazzcinema2024" >> $GITHUB_ENV
+            echo "KEY_ALIAS=jazz_cinema"         >> $GITHUB_ENV
+            echo "KEY_PASSWORD=jazzcinema2024"   >> $GITHUB_ENV
           fi
 
       - name: 🔧 Configure signing in gradle
@@ -82,23 +82,25 @@ jobs:
           storeFile=keystore.jks
           EOF
 
-      - name: 🏗️ Build Release APK
-        run: flutter build apk --release --split-per-abi
+      - name: 🏗️ Build Release APK (split per ABI — arm64 + armeabi-v7a)
+        run: |
+          flutter build apk --release --split-per-abi \
+            --dart-define=FLUTTER_WEB_USE_SKIA=true
 
-      - name: 🗜️ Build universal APK
+      - name: 🗜️ Build universal APK (single file for all devices)
         run: flutter build apk --release
 
       - name: 📋 Get version info
         id: version
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
-          BUILD=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
+          BUILD=$(grep  '^version:' pubspec.yaml | sed 's/.*+//')
           TIMESTAMP=$(date +'%Y%m%d-%H%M')
           TAG="${{ github.event.inputs.release_tag }}"
           if [ -z "$TAG" ]; then TAG="v${VERSION}-build${TIMESTAMP}"; fi
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "build=${BUILD}" >> $GITHUB_OUTPUT
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}"     >> $GITHUB_OUTPUT
+          echo "build=${BUILD}"         >> $GITHUB_OUTPUT
+          echo "tag=${TAG}"             >> $GITHUB_OUTPUT
           echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
 
       - name: 📤 Upload APK artifacts
@@ -119,25 +121,36 @@ jobs:
             ## 🎬 Jazz Cinema Pro v${{ steps.version.outputs.version }}
 
             ### 📥 Download APK
+
             | File | Architecture | Recommended for |
             |------|-------------|-----------------|
-            | `app-release.apk` | Universal | Most devices |
+            | `app-release.apk` | Universal | **Use this if unsure** |
             | `app-arm64-v8a-release.apk` | ARM64 | Modern phones (2017+) |
             | `app-armeabi-v7a-release.apk` | ARMv7 | Older phones |
 
-            ### ✨ What's in v11 (Flutter)
-            - 🎨 Beautiful Material 3 dark UI with 5 themes
-            - 🎬 Movies, Series, Live TV, Shorts, Songs
-            - 📥 Download support
-            - 🔐 Key activation system (4 movies/day trial)
-            - 🌙 Glassmorphism design
+            ### ✅ Fixes in this build
+            - No more crash on open — full try/catch on startup
+            - Removed unused native plugins that caused launch crash on Android 5-8
+            - Google Fonts no longer crashes on cold start with no internet
+            - Fixed deprecated ColorScheme API (Material 3 compliant)
+            - Comprehensive ProGuard rules — R8 no longer strips required classes
+            - Multi-dex enabled — safe on all Android 5+ devices
+            - Updated Kotlin 1.9.24 + AGP 8.3.2 + Gradle 8.4
+
+            ### ✨ Features
+            - 🎨 5 Themes: Netflix Red, Ocean Blue, Royal Purple, Night Teal, Cinema Amber
+            - 🎬 Movies, Series from your MySQL database
+            - 📺 25+ Live TV channels (Sports, News, Entertainment, Kids, Music)
+            - 🔐 Key activation system (JAZZ-XXXXX-XXXXX-XXXXX format)
+            - 🆓 Trial mode: 4 movies/day free
+            - 📱 Works on **Android 5.0 – 14** (API 21–34)
 
             ### 📲 How to Install
-            1. Download `app-release.apk`
-            2. On your Android phone: **Settings → Security → Install unknown apps**
-            3. Open the downloaded APK and install
+            1. Download `app-release.apk` (universal — works on all phones)
+            2. On your phone: **Settings → Security → Allow unknown sources**
+            3. Open the APK and install
 
-            > Built automatically from commit `${{ github.sha }}`
+            > Built from commit `${{ github.sha }}`
           files: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/flutter-apk/app-arm64-v8a-release.apk

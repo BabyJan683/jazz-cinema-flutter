@@ -1,11 +1,13 @@
 buildscript {
-    ext.kotlin_version = '1.9.10'
+    // Kotlin 1.9.24 — latest 1.9.x, stable on AGP 8.3, supports API 21-34
+    ext.kotlin_version = '1.9.24'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.0'
+        // AGP 8.3.2 — stable, supports minSdk 21, works with Gradle 8.4
+        classpath 'com.android.tools.build:gradle:8.3.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

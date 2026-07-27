@@ -68,32 +68,49 @@ class AppThemes {
 
   static ThemeData buildTheme(String themeKey) {
     final t = themes[themeKey] ?? themes['netflix_red']!;
+
+    // Use a safe fallback text theme — GoogleFonts is fine but won't crash
+    // if fonts aren't cached (allowRuntimeFetching = false set in main.dart)
+    TextTheme baseText;
+    try {
+      baseText = GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme);
+    } catch (_) {
+      baseText = ThemeData.dark().textTheme;
+    }
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.dark(
-        primary: t.primary,
-        secondary: t.accent,
-        surface: t.surface,
-        background: t.background,
-        onPrimary: t.onPrimary,
-        onSecondary: Colors.white,
-        onSurface: Colors.white,
-        onBackground: Colors.white,
-      ),
       scaffoldBackgroundColor: t.background,
+      colorScheme: ColorScheme(
+        brightness: Brightness.dark,
+        primary: t.primary,
+        onPrimary: t.onPrimary,
+        secondary: t.accent,
+        onSecondary: Colors.white,
+        error: Colors.red,
+        onError: Colors.white,
+        surface: t.surface,
+        onSurface: Colors.white,
+        // surfaceContainerHighest is the non-deprecated replacement for
+        // the old `background` field in Material 3 colour roles.
+        surfaceContainerHighest: t.surfaceVariant,
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        titleTextStyle: GoogleFonts.poppins(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+        titleTextStyle: _safeFont(
+          GoogleFonts.poppins,
+          const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: t.card,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -107,7 +124,7 @@ class AppThemes {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+      textTheme: baseText,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: t.primary,
@@ -127,7 +144,7 @@ class AppThemes {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white12),
+          borderSide: const BorderSide(color: Colors.white12),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -137,6 +154,19 @@ class AppThemes {
         labelStyle: const TextStyle(color: Colors.white60),
       ),
     );
+  }
+
+  /// Safely wraps a GoogleFonts call — returns the fallback style if
+  /// the font is unavailable (offline first launch without cached fonts).
+  static TextStyle _safeFont(
+    TextStyle Function({TextStyle? textStyle}) fontFn,
+    TextStyle fallback,
+  ) {
+    try {
+      return fontFn(textStyle: fallback);
+    } catch (_) {
+      return fallback;
+    }
   }
 }
 

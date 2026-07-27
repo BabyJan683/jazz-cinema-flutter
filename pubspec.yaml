@@ -1,7 +1,7 @@
 name: jazz_cinema
 description: Jazz Cinema Pro v11 — Beautiful Flutter movie streaming app
 publish_to: 'none'
-version: 11.0.0+1
+version: 11.0.0+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -13,12 +13,10 @@ dependencies:
   # State management
   provider: ^6.1.2
 
-  # Network & HTTP
+  # Network & HTTP (dio was unused and caused startup crashes on old Android)
   http: ^1.2.1
-  dio: ^5.7.0
-  connectivity_plus: ^6.1.0
 
-  # Database (direct MySQL)
+  # Database (pure-Dart MySQL — no native code, safe on all Android versions)
   mysql_client: ^0.0.27
 
   # Video playback
@@ -30,18 +28,11 @@ dependencies:
 
   # Local storage
   shared_preferences: ^2.3.2
-  path_provider: ^2.1.4
 
   # UI / Animations
   shimmer: ^3.0.0
   flutter_animate: ^4.5.0
   google_fonts: ^6.2.1
-
-  # Utils
-  intl: ^0.19.0
-  url_launcher: ^6.3.1
-  package_info_plus: ^8.1.2
-  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
